@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Note</title>
+    <style>
+        .notebox{
+            position: relative;
+            float: left;
+            width:30vw;
+            height: 35vh;
+            border-radius: 5px;
+            border-width: 2px;
+            border-color: gray;
+            background-color: white;
+            margin-top: 10px;
+            margin-left: 10px;
+            margin-right: 20px;
+           
+        }
+        .headstyle{
+            background-color: blue;
+            height: 15%;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            color: blue;
+            padding-left: 10px;
+            padding-top: 5px;
+            padding-right:2px;
+            width:100%;
+            background:#c4c4c4 linear-gradient(top, rgba(255,255,255,0.8), rgba(255,255,255,0.4));
+            background:#c4c4c4 -webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,0.8)), to(rgba(255,255,255,0)));
+            background:#c4c4c4 -moz-linear-gradient(top, rgba(255,255,255,0.8), rgba(255,255,255,0));
+            text-shadow: 0px 1px 0px rgba(255,255,255,0.7);
+            font-weight: bold;
+            border:1px solid #a8a8a8;
+            font-size: 2vh;
+        }
+        .headcloseicon{
+            cursor: pointer;
+            padding: 5px;
+            color:white;
+            float: right
+        }
+        .notebody{
+            background-color: lightblue;
+            color:black;
+            width:100%;
+            height:85%;
+            padding-left: 10px;
+            padding-top: 5px;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+            border:1px solid #a8a8a8;
+            padding-right:2px;
+        }
+        .resize{
+            float: right;
+            width:10px;
+            height: 10px;
+            cursor: pointer;
+            margin-top: -10px;
+            background-color: red
+        }
+        .btn{
+            font-size: 14pt;
+        }
+
+    </style>
+</head>
+<body  onload="readlast()">
+  <div>
+      <button class="btn" onclick="addnewnote()">添加新的便利贴</button>
+      <button class="btn" onclick="clearall()">清除所有便利贴</button>
+
+  </div>
+  <div id="container" >
+      <!--<div  id="notebox" class="notebox" style="left:10px;top:10px">
+          <div id="headtitle" class="headstyle" style="width: 100%">
+              <span contenteditable="true"  style="margin-right: 10px;z-index: 9999" ></span>
+              <img class="headcloseicon"  src="images/close.png"></img>
+          </div>
+          <div class="notebody" contenteditable="true"></div>
+          <div id="sizediv" style="float: right;width:10px;height: 10px;cursor: pointer;margin-top: -10px;background-color: red"></div>
+
+      </div>
+      <div   class="notebox" style="left:20vw;top:10px">
+          <div  class="headstyle" style="width: 100%">
+              <span contenteditable="true"  style="margin-right: 10px;z-index: 9999" ></span>
+              <img class="headcloseicon"  src="images/close.png"></img>
+          </div>
+          <div class="notebody" contenteditable="true">
+
+          </div>
+          <div  style="float: right;width:10px;height: 10px;cursor: pointer;margin-top: -10px;background-color: red"></div>
+      </div>-->
+  </div>
+
+</body>
+<script>
+    //定义可拖动DIV
+    function NewDivDrag(pobj,obj) {
+        var mypobj=pobj;
+        obj.onmousedown=function (e) {
+            e=fixEvent(e);
+           var myindex=mypobj.style["z-index"];
+            mypobj.style["z-index"]=getmaxindex(myindex);
+            console.log(mypobj.style["z-index"]);
+            if (mypobj.x=undefined){
+                mypobj.x= mypobj.offsetLeft;
+                mypobj.y= mypobj.offsetLeft;
+            }else{
+                mypobj.x= e.clientX;//-mypobj.offsetLeft+mypobj.offsetLeft;//
+                mypobj.y= e.clientY;//-mypobj.offsetTop+mypobj.offsetTop;//
+            }
+            document.onmousemove=move;
+            document.onmouseup=end;
+        };
+
+       var move=function(e){
+            e=fixEvent(e);
+            var oLeft,oTop;
+            oLeft= e.clientX-mypobj.x;
+            oTop= e.clientY-mypobj.y;
+            mypobj.style.left=oLeft+"px";
+            mypobj.style.top=oTop+"px";
+        };
+       var end=function(e){
+            e=fixEvent(e);
+           obj=document.onmousemove=document.onmouseup=null;
+           saveall();
+        };
+       var fixEvent=function(e){
+            if (!e){
+                e=window.event;
+                e.target= e.srcElement;
+                e.layerX= e.offsetX;
+                e.layerY= e.offsetY;
+            }
+            return e;
+        };
+
+    }
+    //获取最外层的z-index
+    var getmaxindex=function (myindex) {
+
+        var index=0;
+        if (myindex) index=parseInt(myindex);
+        var container=document.getElementById("container");
+        var childs=container.getElementsByClassName("notebox");
+        for(var i in childs){
+            var obj=childs[i];
+            if (obj!=null){
+                if (obj.style){
+                    var tempindex=obj.style["z-index"];
+                    if (tempindex){
+                        if (parseInt(tempindex)>index) index=parseInt(tempindex);
+                    }
+                }
+
+            }
+            // console.log(obj.style["z-index"]);
+        }
+        if (myindex){
+            if (index>parseInt(myindex)) return index+1
+            else return index
+        } else
+        return index+1;
+
+    }
+   //定义缩放DIV
+    function NewDivResize(pobj,obj) {
+        var mypobj=pobj;
+        var myobj=obj;
+        obj.onmousedown=function (e) {
+            e=fixEvent(e);
+            mypobj.tx= e.clientX;
+            mypobj.ty= e.clientY;
+
+            document.onmousemove=move;
+            document.onmouseup=end;
+        }
+       var move=function(e){
+            e=fixEvent(e);
+            var oWidth,oHeight;
+
+            oWidth= e.clientX-mypobj.tx+mypobj.clientWidth;
+            oHeight= e.clientY-mypobj.ty+mypobj.clientHeight;
+            if (oWidth<100) oWidth=100;
+            if (oHeight<100) oHeight=100;
+            mypobj.style.width=oWidth+"px";
+            mypobj.style.height=oHeight+"px";
+            mypobj.tx= e.clientX;
+            mypobj.ty= e.clientY;
+        };
+      var  end=function(e){
+            e=fixEvent(e);
+          myobj=document.onmousemove=document.onmouseup=null;
+          saveall();
+        };
+       var  fixEvent=function(e){
+            if (!e){
+                e=window.event;
+                e.target= e.srcElement;
+                e.layerX= e.offsetX;
+                e.layerY= e.offsetY;
+            }
+            return e;
+        }
+    }
+    //关闭单个便贴
+    function closenote(obj) {
+       var notediv= obj.parentNode.parentNode;
+        var container=document.getElementById("container");
+        container.removeChild(notediv);
+        saveall();
+    }
+    //保存所有便贴
+    function saveall() {
+        if (db!=null)
+            db.transaction(function(tx){
+                tx.executeSql('delete from notedata',[]);
+            });
+        if (db!=null){
+            var content="";
+            var container=document.getElementById("container");
+            if (container!=null) content=container.innerHTML;
+            db.transaction(function(tx){
+                tx.executeSql('insert into notedata values(?,?)',["01",content],onSuccess,onError)
+            });
+        }
+   }
+    var db =null;
+    if(window.openDatabase) db=openDatabase('contactdb','','local database demo',204800);
+   //读取上一次保存的便贴
+    function readlast() {
+        if (db!=null)
+            db.transaction(function(tx){
+                //如果数据表不存在，则创建数据表3444
+                // tx.executeSql('drop table configdata',[]);
+                tx.executeSql('create table if not exists notedata(noteid text,notecontent text)',[]);
+                //查询上一次保存的便贴，库里只有一条记录
+                tx.executeSql('select * from notedata',[],function(tx,rs){
+                    if(rs.rows.length>0){
+                        var row = rs.rows.item(0);
+                        if (row!=undefined){
+                            var container=document.getElementById("container");
+                            container.innerHTML=row.notecontent;
+                            setDragandResize();
+
+
+                        }
+
+                    }
+                })
+            })
+    }
+    //设置每一便贴的拖动、缩放事件
+    var setDragandResize=function(){
+        var container=document.getElementById('container');
+        if (container!=null){
+            var childs=container.getElementsByClassName("notebox");
+           // console.log(childs)
+            if (childs.length>0){
+                for(var i=0;i<childs.length;i++) {
+                    var headdiv=null;
+                    var resizediv=null;
+                    var notebox = childs[i];
+                  //  console.log(notebox);
+                    var headdivs= notebox.getElementsByClassName("headstyle") ;
+                    if (headdivs.length>0) headdiv=headdivs[0];
+                    var resizedivs= notebox.getElementsByClassName("resize") ;
+                    if (resizedivs.length>0) resizediv=resizedivs[0];
+                    var DivDray=new  NewDivDrag(notebox,headdiv);
+                    var DivResize=new NewDivResize(notebox,resizediv);
+
+                }
+            }
+
+        }
+    };
+
+    //sql语句执行成功后执行的回调函数
+    function onSuccess(tx,rs){
+        console.log("insert succeed");
+        //  alert("操作成功");
+
+    }
+    //sql语句执行失败后执行的回调函数
+    function onError(tx,error){
+        console.log("操作失败，失败信息："+ error.message);
+    }
+    //消除所有3223323232
+    function clearall() {
+        var container=document.getElementById('container');
+        container.innerHTML="";
+        saveall();
+    }
+    //新增便贴
+    function addnewnote() {
+       var container=document.getElementById('container');
+       if (container!=null){
+           var div = document.createElement('div');
+           div.className="notebox";
+           div.style["z-index"]=getmaxindex();
+           container.appendChild(div);
+           var headdiv=document.createElement('div');
+           headdiv.className="headstyle";
+           headdiv.innerHTML="<span contenteditable='true' onblur='saveall()'style='margin-right: 10px; style='margin-right: 20px;z-index:9999></span>"+
+               " <img class='headcloseicon' onclick='closenote(this)' src='close.png'></img>";
+           div.appendChild(headdiv);
+           var bodydiv=document.createElement('div');
+           bodydiv.className="notebody";
+           bodydiv.setAttribute("contenteditable","true");
+           bodydiv.setAttribute("onblur","saveall()");
+           div.appendChild(bodydiv);
+           var resizediv=document.createElement('div');
+           resizediv.setAttribute("class","resize");
+           div.appendChild(resizediv);
+           var DivDray=new  NewDivDrag(div,headdiv);
+           var DivResize=new NewDivResize(div,resizediv);
+
+       }
+    }
+</script>
+</html>
